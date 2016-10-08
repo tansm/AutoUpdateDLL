@@ -17,9 +17,24 @@ namespace AutoUpdate {
                     _sourcePath = value;
                     this.OnPropertyChanged("SourcePath");
                     _sourceFilesManager.Start(value);
+                    HookSourceFiles(); //跟踪源路径的变化，目标路径无需跟踪。
                 }
             }
         }
+
+        private void HookSourceFiles() {
+            if (_watcher == null) {
+                _watcher = new AssemblyWatcher();
+                _watcher.Changed += OnSourceFilesChanged;
+            }
+            _watcher.Path = _sourcePath;
+        }
+
+        private void OnSourceFilesChanged(object sender, EventArgs e) {
+            _sourceFilesManager.Start(_sourcePath);
+        }
+
+        private AssemblyWatcher _watcher;
         private TaskManager<string,SourceFileCollection> _sourceFilesManager = new TaskManager<string,SourceFileCollection>(SourceFileCollection.DoWork);
 
         private string _targetPath;
@@ -167,7 +182,7 @@ namespace AutoUpdate {
                     Owner.CompleteCount++;
                 }
 
-                Owner.AddMessage(string.Format(@"已结束，完成数 / 总数： {0} / {1}", completeCount, lst.Count));
+                Owner.AddMessage(string.Format(@"========== 已结束，成功数 / 总数： {0} / {1} ==========", completeCount, lst.Count));
             }
         }
 

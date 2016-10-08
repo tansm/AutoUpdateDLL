@@ -40,7 +40,6 @@ namespace AutoUpdate {
                 _addmessageFunc = new EventHandler<MessageAddedEventArgs>(this.AddMessage);
             }
             Invoke(_addmessageFunc, this, e);
-            Application.DoEvents();
         }
 
         private EventHandler<MessageAddedEventArgs> _addmessageFunc;
@@ -102,6 +101,39 @@ namespace AutoUpdate {
             }
 
             return result;
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+            System.Diagnostics.Process.Start("https://github.com/MyErpSoft/AutoUpdateDLL");
+        }
+
+        private System.Threading.Thread _test;
+        private System.Threading.AutoResetEvent _resetEvent;
+        private void button1_Click(object sender, EventArgs e) {
+            if (_test == null) {
+                _resetEvent = new System.Threading.AutoResetEvent(false);
+                _test = new System.Threading.Thread(Sync);
+                _test.Start();
+            }
+
+            AddMessage(this, new MessageAddedEventArgs("点我啊"));
+            _resetEvent.Set();
+        }
+
+        private void Sync() {
+            do {
+                _resetEvent.WaitOne();
+
+                if (_addmessageFunc == null) {
+                    _addmessageFunc = new EventHandler<MessageAddedEventArgs>(this.AddMessage);
+                }
+
+                Invoke(_addmessageFunc, this, new MessageAddedEventArgs("开始同步。。。"));
+
+                System.Threading.Thread.Sleep(3000);
+
+                Invoke(_addmessageFunc, this, new MessageAddedEventArgs("同步结束。。。"));
+            } while (true);
         }
     }
 
