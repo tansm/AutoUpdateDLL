@@ -82,12 +82,12 @@ namespace AutoUpdate {
             AddMessage("获取源目录清单： " + _sourcePath);
             var sourceFiles = _sourceFilesManager.Result;
             var sourcePath = _sourceFilesManager.LastArgs;
-            AddMessage("文件数： " + sourceFiles.Count);
+            AddMessage("文件数： " + (sourceFiles == null ? 0 : sourceFiles.Count));
 
             AddMessage("获取目标目录清单： " + _sourcePath);
             var targetFiles = _targetFilesManager.Result;
             var targetPath = _targetFilesManager.LastArgs;
-            AddMessage("文件数： " + targetFiles.Count);
+            AddMessage("文件数： " + (targetFiles == null ? 0 : targetFiles.Count));
 
             if (sourceFiles == null || sourceFiles.IsErrorStatus ||
                 targetFiles == null || targetFiles.IsErrorStatus ||

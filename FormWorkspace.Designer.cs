@@ -26,6 +26,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormWorkspace));
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this._currentWorkspaceBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.btnSelectSourcePath = new System.Windows.Forms.Button();
             this.chkOnlyLastHour = new System.Windows.Forms.CheckBox();
             this.txtLog = new System.Windows.Forms.ListBox();
@@ -54,11 +55,11 @@
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.btnAbout = new System.Windows.Forms.ToolStripButton();
             this.pathBrowser = new System.Windows.Forms.FolderBrowserDialog();
-            this._currentWorkspaceBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.mnuRecentlyNothing = new System.Windows.Forms.ToolStripMenuItem();
+            ((System.ComponentModel.ISupportInitialize)(this._currentWorkspaceBindingSource)).BeginInit();
             this.palEdit.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this._currentWorkspaceBindingSource)).BeginInit();
             this.SuspendLayout();
             // 
             // progressBar1
@@ -70,6 +71,10 @@
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(254, 23);
             this.progressBar1.TabIndex = 16;
+            // 
+            // _currentWorkspaceBindingSource
+            // 
+            this._currentWorkspaceBindingSource.DataSource = typeof(AutoUpdate.Workspace);
             // 
             // btnSelectSourcePath
             // 
@@ -231,11 +236,14 @@
             // 
             // mnuRecentlyUsed
             // 
+            this.mnuRecentlyUsed.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.mnuRecentlyNothing});
             this.mnuRecentlyUsed.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.mnuRecentlyUsed.Name = "mnuRecentlyUsed";
             this.mnuRecentlyUsed.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.P)));
             this.mnuRecentlyUsed.Size = new System.Drawing.Size(203, 22);
             this.mnuRecentlyUsed.Text = "最近使用的(&F)...";
+            this.mnuRecentlyUsed.DropDownOpening += new System.EventHandler(this.mnuRecentlyUsed_DropDownOpening);
             // 
             // toolStripSeparator
             // 
@@ -342,9 +350,11 @@
             this.btnAbout.Text = "帮助(&L)";
             this.btnAbout.Click += new System.EventHandler(this.btnAbout_Click);
             // 
-            // _currentWorkspaceBindingSource
+            // mnuRecentlyNothing
             // 
-            this._currentWorkspaceBindingSource.DataSource = typeof(AutoUpdate.Workspace);
+            this.mnuRecentlyNothing.Name = "mnuRecentlyNothing";
+            this.mnuRecentlyNothing.Size = new System.Drawing.Size(152, 22);
+            this.mnuRecentlyNothing.Text = "无记录";
             // 
             // FormWorkspace
             // 
@@ -358,13 +368,13 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "FormWorkspace";
             this.Text = "组件同步器";
+            ((System.ComponentModel.ISupportInitialize)(this._currentWorkspaceBindingSource)).EndInit();
             this.palEdit.ResumeLayout(false);
             this.palEdit.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this._currentWorkspaceBindingSource)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -401,6 +411,7 @@
         private System.Windows.Forms.ToolStripButton btnAbout;
         private System.Windows.Forms.FolderBrowserDialog pathBrowser;
         private System.Windows.Forms.ToolStripMenuItem mnuIssues;
+        private System.Windows.Forms.ToolStripMenuItem mnuRecentlyNothing;
     }
 }
 

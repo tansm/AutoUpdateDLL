@@ -9,12 +9,17 @@ namespace AutoUpdate {
 
         public FormWorkspace() {
             InitializeComponent();
-            
-            this._manager = new WorkspaceManager();
-            this.CurrentWorkspace = new Workspace() {
-                SourcePath = @"C:\Documents\Digiwin\TRServer\Digiwin.Mars.Export\",
-                TargetPath = @"C:\Tools\E10_3\E50-20160927\"
-            };
+
+            this._manager = WorkspaceManager.GetManager();
+            if (this._manager.History.Count > 0) {
+                this.CurrentWorkspace = this._manager.Open(this._manager.History[0]);
+            }
+            else {
+                this.CurrentWorkspace = new AutoUpdate.Workspace() {
+                    TargetPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    OnlyLastHour = true,
+                };
+            }
         }
 
         internal Workspace CurrentWorkspace {
@@ -70,6 +75,7 @@ namespace AutoUpdate {
         public void CloseCurrentWorkspace() {
             if (_currentWorkspace != null && _currentWorkspace.Dirty) {
                 var result = MessageBox.Show(this, "当前工作区已修改，是否保存修改？", "是否保存修改", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                _currentWorkspace.CancelAll();
                 if (result == DialogResult.OK) {
                     _manager.Save(_currentWorkspace);
                 }
@@ -100,14 +106,14 @@ namespace AutoUpdate {
         protected override void OnClosing(CancelEventArgs e) {
             base.OnClosing(e);
             CloseCurrentWorkspace();
-            _currentWorkspace.CancelAll();
+            _manager.Save();
         }
 
         private void btnAbout_Click(object sender, EventArgs e) {
             System.Diagnostics.Process.Start("https://github.com/MyErpSoft/AutoUpdateDLL");
 
         }
-        
+
         private void mnuOpen_Click(object sender, EventArgs e) {
             CloseCurrentWorkspace();
             pathBrowser.Description = "选择您要同步的目标文件夹，当同步时本软件将源路径最新的文件复制到此目标目录。";
@@ -137,6 +143,57 @@ namespace AutoUpdate {
 
         private void mnuIssues_Click(object sender, EventArgs e) {
             System.Diagnostics.Process.Start("https://github.com/MyErpSoft/AutoUpdateDLL/issues");
+        }
+
+        private void mnuRecentlyUsed_DropDownOpening(object sender, EventArgs e) {
+            var items = mnuRecentlyUsed.DropDownItems;
+            var history = this._manager.History.ToArray();
+
+            var editCount = Math.Min(items.Count, history.Length);
+            for (int i = 0; i < editCount; i++) {
+                var mnuItem = (ToolStripMenuItem)items[i];
+                UpdateRecentlyItem(mnuItem, history,i);
+            }
+
+            //add
+            if (history.Length > items.Count) {
+                for (int i = items.Count; i < history.Length; i++) {
+                    var mnuItem = new ToolStripMenuItem();
+                    UpdateRecentlyItem(mnuItem, history,i);
+                    mnuItem.Click += mnuRecentlyItem_Click;
+                    items.Add(mnuItem);
+                }
+            }
+
+            //remove
+            if (history.Length < items.Count) {
+                var removeCount = items.Count - history.Length;
+                for (int i = 0; i < removeCount; i++) {
+                    var mnuItem = items[items.Count - 1];
+                    mnuItem.Click -= mnuRecentlyItem_Click;
+                    items.RemoveAt(items.Count - 1);
+                }
+            }
+        }
+
+        private void UpdateRecentlyItem(ToolStripMenuItem menu, string[] history, int index) {
+            string text;
+            string path = history[index];
+            if (path.Length > 49) {
+                text = "(&" + index.ToString() + ") ..." + path.Substring(path.Length - 49, 49);
+            }
+            else {
+                text = "(&" + index.ToString() + ") " + path;
+            }
+
+            menu.Text = text;
+            menu.Tag = path;
+        }
+
+        private void mnuRecentlyItem_Click(object sender, EventArgs e) {
+            var path = (string)((ToolStripMenuItem)sender).Tag;
+            CloseCurrentWorkspace();
+            this.CurrentWorkspace = _manager.Open(path);
         }
     }
 
