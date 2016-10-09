@@ -41,6 +41,7 @@
             this.mnuFile = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuOpen = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuRecentlyUsed = new System.Windows.Forms.ToolStripMenuItem();
+            this.mnuRecentlyNothing = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.mnuSave = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuSaveAs = new System.Windows.Forms.ToolStripMenuItem();
@@ -55,7 +56,6 @@
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.btnAbout = new System.Windows.Forms.ToolStripButton();
             this.pathBrowser = new System.Windows.Forms.FolderBrowserDialog();
-            this.mnuRecentlyNothing = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this._currentWorkspaceBindingSource)).BeginInit();
             this.palEdit.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -85,6 +85,7 @@
             this.btnSelectSourcePath.TabIndex = 15;
             this.btnSelectSourcePath.Text = "选择...";
             this.btnSelectSourcePath.UseVisualStyleBackColor = true;
+            this.btnSelectSourcePath.Click += new System.EventHandler(this.btnSelectSourcePath_Click);
             // 
             // chkOnlyLastHour
             // 
@@ -245,6 +246,12 @@
             this.mnuRecentlyUsed.Text = "最近使用的(&F)...";
             this.mnuRecentlyUsed.DropDownOpening += new System.EventHandler(this.mnuRecentlyUsed_DropDownOpening);
             // 
+            // mnuRecentlyNothing
+            // 
+            this.mnuRecentlyNothing.Name = "mnuRecentlyNothing";
+            this.mnuRecentlyNothing.Size = new System.Drawing.Size(112, 22);
+            this.mnuRecentlyNothing.Text = "无记录";
+            // 
             // toolStripSeparator
             // 
             this.toolStripSeparator.Name = "toolStripSeparator";
@@ -349,12 +356,6 @@
             this.btnAbout.Size = new System.Drawing.Size(23, 22);
             this.btnAbout.Text = "帮助(&L)";
             this.btnAbout.Click += new System.EventHandler(this.btnAbout_Click);
-            // 
-            // mnuRecentlyNothing
-            // 
-            this.mnuRecentlyNothing.Name = "mnuRecentlyNothing";
-            this.mnuRecentlyNothing.Size = new System.Drawing.Size(152, 22);
-            this.mnuRecentlyNothing.Text = "无记录";
             // 
             // FormWorkspace
             // 

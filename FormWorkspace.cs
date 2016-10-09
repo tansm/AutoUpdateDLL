@@ -76,7 +76,7 @@ namespace AutoUpdate {
             if (_currentWorkspace != null && _currentWorkspace.Dirty) {
                 var result = MessageBox.Show(this, "当前工作区已修改，是否保存修改？", "是否保存修改", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                 _currentWorkspace.CancelAll();
-                if (result == DialogResult.OK) {
+                if (result == DialogResult.Yes) {
                     _manager.Save(_currentWorkspace);
                 }
                 else if (result == DialogResult.Cancel) {
@@ -194,6 +194,16 @@ namespace AutoUpdate {
             var path = (string)((ToolStripMenuItem)sender).Tag;
             CloseCurrentWorkspace();
             this.CurrentWorkspace = _manager.Open(path);
+        }
+
+        private void btnSelectSourcePath_Click(object sender, EventArgs e) {
+            if (this.CurrentWorkspace != null) {
+                pathBrowser.Description = "选择来源文件夹，同步时将检查此目录是否存在最新的文件并将其复制到目标文件夹。";
+                pathBrowser.SelectedPath = this.CurrentWorkspace.SourcePath;
+                if (pathBrowser.ShowDialog(this) == DialogResult.OK) {
+                    this.CurrentWorkspace.SourcePath = pathBrowser.SelectedPath;
+                }
+            }
         }
     }
 

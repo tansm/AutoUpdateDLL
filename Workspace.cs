@@ -79,30 +79,7 @@ namespace AutoUpdate {
         }
 
         public void Sync() {
-            AddMessage("获取源目录清单： " + _sourcePath);
-            var sourceFiles = _sourceFilesManager.Result;
-            var sourcePath = _sourceFilesManager.LastArgs;
-            AddMessage("文件数： " + (sourceFiles == null ? 0 : sourceFiles.Count));
-
-            AddMessage("获取目标目录清单： " + _sourcePath);
-            var targetFiles = _targetFilesManager.Result;
-            var targetPath = _targetFilesManager.LastArgs;
-            AddMessage("文件数： " + (targetFiles == null ? 0 : targetFiles.Count));
-
-            if (sourceFiles == null || sourceFiles.IsErrorStatus ||
-                targetFiles == null || targetFiles.IsErrorStatus ||
-                !object.ReferenceEquals(sourcePath, _sourcePath) ||
-                !object.ReferenceEquals(targetPath, _targetPath)) {
-                AddMessage("失败，路径不准确或当前状态无效。");
-                return;
-            }
-
-            _syncTaskManager.Start(new SyncArgs() {
-                SourceFiles = sourceFiles,
-                TargetFiles = targetFiles,
-                OnlyLastHour = _onlyLastHour,
-                Owner = this
-            });
+            _syncTaskManager.Start(this);
         }
 
         public void CancelAll() {
@@ -111,7 +88,7 @@ namespace AutoUpdate {
             _targetFilesManager.Cancel();
         }
 
-        private TaskManager<SyncArgs, bool> _syncTaskManager = new TaskManager<SyncArgs, bool>(DoWork);
+        private TaskManager<Workspace, bool> _syncTaskManager = new TaskManager<Workspace, bool>(DoWork);
 
         private bool _working;
         [XmlIgnore]
@@ -133,72 +110,83 @@ namespace AutoUpdate {
 
         //为后台任务准备。
         internal static void DoWork(DoWorkEventArgs e) {
-            var args = (SyncArgs)e.Argument;
-            args.Owner.Working = true;
+            var owner = (Workspace)e.Argument;
+            owner.Working = true;
 
-            try {                
-                args.DoWork(e);
+            try {
+                owner.SyncCore(e);
             }
             finally {
-                args.Owner.CompleteCount = 0;
-                args.Owner.Working = false;
+                owner.CompleteCount = 0;
+                owner.Working = false;
             }
         }
 
-        private class SyncArgs {
-            public SourceFileCollection SourceFiles;
-            public TargetFileCollection TargetFiles;
-            public bool OnlyLastHour;
-            public Workspace Owner;
+        private void SyncCore(CancelEventArgs e) {
+            AddMessage("获取源目录清单： " + _sourcePath);
+            var sourceFiles = _sourceFilesManager.Result;
+            var sourcePath = _sourceFilesManager.LastArgs;
+            AddMessage("文件数： " + (sourceFiles == null ? 0 : sourceFiles.Count));
 
-            public void DoWork(CancelEventArgs e) {
-                //找到源中需要更新的文件，
-                if (OnlyLastHour) {
-                    SourceFiles = SourceFiles.GetLastHourItems();
+            AddMessage("获取目标目录清单： " + _sourcePath);
+            var targetFiles = _targetFilesManager.Result;
+            var targetPath = _targetFilesManager.LastArgs;
+            AddMessage("文件数： " + (targetFiles == null ? 0 : targetFiles.Count));
+
+            if (sourceFiles == null || sourceFiles.IsErrorStatus ||
+                targetFiles == null || targetFiles.IsErrorStatus ||
+                !object.ReferenceEquals(sourcePath, _sourcePath) ||
+                !object.ReferenceEquals(targetPath, _targetPath)) {
+                AddMessage("失败，路径不准确或当前状态无效。");
+                return;
+            }
+
+            //找到源中需要更新的文件，
+            if (OnlyLastHour) {
+                sourceFiles = sourceFiles.GetLastHourItems();
+            }
+
+            List<KeyValuePair<FileInfo, FileInfo>> lst = new List<KeyValuePair<FileInfo, FileInfo>>();
+
+            foreach (var sourceFile in sourceFiles) {
+                IEnumerable<FileInfo> targetList;
+
+                if (e.Cancel) {
+                    throw new OperationCanceledException();
                 }
 
-                List<KeyValuePair<FileInfo, FileInfo>> lst = new List<KeyValuePair<FileInfo, FileInfo>>();
-
-                foreach (var sourceFile in SourceFiles) {
-                    IEnumerable<FileInfo> targetList;
-
-                    if (e.Cancel) {
-                        throw new OperationCanceledException();
-                    }
-
-                    if (TargetFiles.TryGet(sourceFile.Name, out targetList)) {
-                        foreach (var targetFile in targetList) {
-                            if (sourceFile.LastWriteTime > targetFile.LastWriteTime) {
-                                lst.Add(new KeyValuePair<FileInfo, FileInfo>(sourceFile, targetFile));
-                            }
+                if (targetFiles.TryGet(sourceFile.Name, out targetList)) {
+                    foreach (var targetFile in targetList) {
+                        if (sourceFile.LastWriteTime > targetFile.LastWriteTime) {
+                            lst.Add(new KeyValuePair<FileInfo, FileInfo>(sourceFile, targetFile));
                         }
                     }
                 }
+            }
 
-                Owner.SyncFileCount = lst.Count - 1;
-                int completeCount = 0;
-                foreach (var item in lst) {
-                    if (e.Cancel) {
-                        throw new OperationCanceledException();
-                    }
-
-                    try {
-                        File.Copy(item.Key.FilePath, item.Value.FilePath, true);
-                        item.Value.UpdateLastWriteTime();
-                        //System.Threading.Thread.Sleep(500);
-                        Owner.AddMessage("更新： " + item.Value.FilePath);
-                        completeCount++;
-                    }
-                    catch {
-                        Owner.AddMessage("失败： " + item.Value.FilePath);
-                    }
-                    Owner.CompleteCount++;
+            this.SyncFileCount = lst.Count - 1;
+            int completeCount = 0;
+            foreach (var item in lst) {
+                if (e.Cancel) {
+                    throw new OperationCanceledException();
                 }
 
-                Owner.AddMessage(string.Format(@"========== 已结束，成功数 / 总数： {0} / {1} ==========", completeCount, lst.Count));
+                try {
+                    File.Copy(item.Key.FilePath, item.Value.FilePath, true);
+                    item.Value.UpdateLastWriteTime();
+                    //System.Threading.Thread.Sleep(500);
+                    this.AddMessage("更新： " + item.Value.FilePath);
+                    completeCount++;
+                }
+                catch {
+                    this.AddMessage("失败： " + item.Value.FilePath);
+                }
+                this.CompleteCount++;
             }
-        }
 
+            this.AddMessage(string.Format(@"========== 已结束，成功数 / 总数： {0} / {1} ==========", completeCount, lst.Count));
+        }
+        
         private void AddMessage(string message) {
             if (this.MessageAdded != null) {
                 var time = DateTime.Now.ToLongTimeString();
