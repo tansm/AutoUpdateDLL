@@ -110,7 +110,7 @@ namespace AutoUpdate {
         }
 
         private void btnAbout_Click(object sender, EventArgs e) {
-            System.Diagnostics.Process.Start("https://github.com/MyErpSoft/AutoUpdateDLL");
+            System.Diagnostics.Process.Start("https://github.com/tansm/AutoUpdateDLL");
 
         }
 
@@ -142,7 +142,7 @@ namespace AutoUpdate {
         }
 
         private void mnuIssues_Click(object sender, EventArgs e) {
-            System.Diagnostics.Process.Start("https://github.com/MyErpSoft/AutoUpdateDLL/issues");
+            System.Diagnostics.Process.Start("https://github.com/tansm/AutoUpdateDLL/issues");
         }
 
         private void mnuRecentlyUsed_DropDownOpening(object sender, EventArgs e) {
