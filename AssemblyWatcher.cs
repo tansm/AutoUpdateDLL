@@ -6,7 +6,7 @@ using System.Text;
 namespace AutoUpdate {
 
     //观察路径下的dll变更，在更新后的2秒左右刷新结果。
-    class AssemblyWatcher {
+    class AssemblyWatcher : IDisposable {
 
         private string _path;
         public string Path {
@@ -80,5 +80,31 @@ namespace AutoUpdate {
             //在标记为脏后，定时器发起同步，很可能在同步的过程中又发生变更，所以我使用版本号的方式，这样就知道之后有没有再次发生改变。
             Interlocked.Increment(ref _changedVersion);
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // 要检测冗余调用
+
+        protected virtual void Dispose(bool disposing) {
+            if (!disposedValue) {
+                if (disposing) {
+                    if (_timer != null) {
+                        _timer.Dispose();
+                        _timer = null;
+                    }
+
+                    if (_watcher != null) {
+                        _watcher.Dispose();
+                        _watcher = null;
+                    }
+                }
+
+                disposedValue = true;
+            }
+        }
+        
+        public void Dispose() {
+            Dispose(true);
+        }
+        #endregion
     }
 }

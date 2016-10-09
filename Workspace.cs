@@ -2,9 +2,17 @@
 using System.ComponentModel;
 using System.IO;
 using System;
+using System.Xml.Serialization;
 
 namespace AutoUpdate {
-    class Workspace : INotifyPropertyChanged {
+
+    /* xml 的示例：
+     * <Workspace>
+     *   <SourcePath>c:\abc\</SourcePath>
+     *   <OnlyLastHour>true</OnlyLastHour>
+     * </Workspace>
+    */
+    public class Workspace : INotifyPropertyChanged,IDisposable {
 
         private string _sourcePath;
         /// <summary>
@@ -16,6 +24,7 @@ namespace AutoUpdate {
                 if (_sourcePath != value) {
                     _sourcePath = value;
                     this.OnPropertyChanged("SourcePath");
+                    this.Dirty = true;
                     _sourceFilesManager.Start(value);
                     HookSourceFiles(); //跟踪源路径的变化，目标路径无需跟踪。
                 }
@@ -41,6 +50,7 @@ namespace AutoUpdate {
         /// <summary>
         /// 目标路径
         /// </summary>
+        [XmlIgnore]
         public string TargetPath {
             get { return _targetPath; }
             set {
@@ -63,6 +73,7 @@ namespace AutoUpdate {
                 if (_onlyLastHour != value) {
                     _onlyLastHour = value;
                     this.OnPropertyChanged("OnlyLastHour");
+                    this.Dirty = true;
                 }
             }
         }
@@ -103,6 +114,7 @@ namespace AutoUpdate {
         private TaskManager<SyncArgs, bool> _syncTaskManager = new TaskManager<SyncArgs, bool>(DoWork);
 
         private bool _working;
+        [XmlIgnore]
         public bool Working {
             get { return _working; }
             private set {
@@ -114,6 +126,7 @@ namespace AutoUpdate {
             }
         }
 
+        [XmlIgnore]
         public bool CanSync {
             get { return !_working; }
         }
@@ -193,9 +206,10 @@ namespace AutoUpdate {
             }
         }
 
-        public event EventHandler<MessageAddedEventArgs> MessageAdded;
+        internal event EventHandler<MessageAddedEventArgs> MessageAdded;
 
         private int _syncFileCount = 100;
+        [XmlIgnore]
         public int SyncFileCount {
             get { return _syncFileCount; }
             set {
@@ -207,6 +221,7 @@ namespace AutoUpdate {
         }
 
         private int _completeCount;
+        [XmlIgnore]
         public int CompleteCount {
             get { return _completeCount; }
             set {
@@ -225,6 +240,44 @@ namespace AutoUpdate {
             if (this.PropertyChanged != null) {
                 this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
+        }
+
+        private bool _dirty;
+        /// <summary>
+        /// 返回当前对象是否已经发生修改。
+        /// </summary>
+        [XmlIgnore]
+        public bool Dirty {
+            get { return _dirty; }
+            internal set {
+                if (_dirty != value) {
+                    _dirty = value;
+                    this.OnPropertyChanged("Dirty");
+                }
+            }
+        }
+        #endregion
+
+        #region IDisposable Support
+        private bool disposedValue = false; // 要检测冗余调用
+
+        protected virtual void Dispose(bool disposing) {
+            if (!disposedValue) {
+                if (disposing) {
+                    CancelAll();
+                }
+
+                if (_watcher != null) {
+                    _watcher.Dispose();
+                    _watcher = null;
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose() {
+            Dispose(true);
         }
         #endregion
     }
